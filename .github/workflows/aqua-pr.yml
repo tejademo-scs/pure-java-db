@@ -29,7 +29,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webapp # Replace with your application name
-          path: ${{ path.join(github.workspace, 'src/main/webapp', '*.jar') }}  # Replace with actual path
+          path: ${{ path.join(github.workspace, '*.jar') }}  # Replace with actual path
 
       - name: Publish to GitHub Packages Apache Maven  # Optional
         run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
