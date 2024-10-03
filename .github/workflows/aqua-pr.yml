@@ -9,7 +9,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      packages: write
+      packages: write  # Needed for upload-artifact action
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -24,28 +24,29 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-        
-      - name: Publish to GitHub Packages Apache Maven
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-app # Replace with your application name
+          path: ${{ path.join(github.workspace, '<your_jar_output_directory>', '*.jar') }}  # Replace with actual path
+
+      - name: Publish to GitHub Packages Apache Maven  # Optional
         run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
         env:
-         GITHUB_TOKEN: ${{ github.TOKEN }}
+          GITHUB_TOKEN: ${{ github.TOKEN }}  # Optional if you want to publish to packages
 
       - name: Run Aqua scanner
         uses: docker://aquasec/aqua-scanner
         with:
           args: trivy fs --sast --scanners misconfig,vuln,secret --db-repository=registry.aquasec.com/trivy-db:2 --checks-bundle-repository=registry.aquasec.com/trivy-checks:1 --java-db-repository=registry.aquasec.com/trivy-java-db:1 .
           # Access Aqua credentials from secrets
-          
 
 env:
   GITHUB_TOKEN: ${{ secrets.TOKEN }}
   TRIVY_RUN_AS_PLUGIN: 'aqua'
-  ACTIONS_RUNTIME_TOKEN: ${{ secrets.TOKEN }} 
+  ACTIONS_RUNTIME_TOKEN: ${{ secrets.TOKEN }}  # Might not be needed depending on your workflow setup
   AQUA_KEY: ${{ secrets.AQUA_KEY }}
   AQUA_SECRET: ${{ secrets.AQUA_SECRET }}
-  TRIVY_USERNAME: ${{ secrets.TRIVY_USERNAME }}
-  TRIVY_PASSWORD: ${{ secrets.TRIVY_PASSWORD }}
-  # Might not be needed depending on your workflow setup
-
-# Remove these lines and store credentials as secrets instead
-# 
+  TRIVY_USERNAME: ${{ secrets.AQUA_USERNAME }}
+  TRIVY_PASSWORD: ${{ secrets.AQUA_PASSWORD }}
